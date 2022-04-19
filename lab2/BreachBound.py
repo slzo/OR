@@ -5,7 +5,7 @@ from queue import PriorityQueue
 import numpy as np
 from fractions import Fraction
 Que = queue.PriorityQueue() #优先队列
-
+SOL = list()#最优解取值
 class IP_Model(object): #求解整数规划
     def __init__(self, c, A, b, min_, max_):
         """
@@ -34,9 +34,8 @@ class IP_Model(object): #求解整数规划
             if lp._solve()==pywraplp.Solver.INFEASIBLE : #无可行解
                 continue
             #----------------有可行解-----------------
-            if(lp.get_val() <= self._val): #目标函数值小于下界,直接剪枝
+            if(lp.get_val() < self._val): #目标函数值小于下界,直接剪枝
                 continue
-            print(lp._c, lp._A, lp._b, lp._min, lp._max, lp.get_val(), lp.get_sol())
 
             #判断解是否全是整数,若含非整数,继续进行分支
             sol=lp.get_sol()
@@ -56,8 +55,13 @@ class IP_Model(object): #求解整数规划
             if(flag): #该问题进行了分支
                 continue
             else: #当前问题得到了全整数解
-                self._val = lp.get_val() #更新目标函数值的下界
-                self._sol = lp.get_sol()
+                if(lp.get_val() == self._val):
+                    SOL.append(lp.get_sol())
+                    continue
+                else:
+                    SOL.clear();
+                    self._val = lp.get_val() #更新目标函数值的下界
+                    SOL.append(lp.get_sol())
     def get_sol(self): #返回可行解
         return self._sol
 
@@ -112,15 +116,16 @@ class LP_Model(object): #线性规划问题求解
         return self.get_val() == other.get_val()
 
 def start(): #由此输入数据,并调用IP进行解决
-    max_min = int(input())
-    s = input()
+    max_min = int(input("输入目标函数的类型,0代表max 1代表min:"))
+    s = input("输入目标函数的系数(空格隔开):")
     c = np.array([Fraction(n) for n in s.split()]).astype(float)
     if(max_min):
         c*=-1
-    row = int(input())
-    col = int(input())
+    row = int(input("输入约束条件个数:"))
+    col = int(input("输入约束变量个数:"))
     A = np.ones((row,col))
     b = np.ones(row)
+    print("输入约束条件矩阵(系数1~系数n,常数项,符号项(1 mean <=; 2 mean >=;0 mean = ):")
     for i in range(row):
         s = input()
         arr = [Fraction(n) for n in s.split()]
@@ -135,8 +140,11 @@ def start(): #由此输入数据,并调用IP进行解决
     ip = IP_Model(c,A,b,min_,max_)
     ip._Init()
     ip._solve()
-    print(ip.get_sol())
-    print(ip.get_val())
+    print(SOL)
+    if(max_min):
+        print(-1*ip.get_val())
+    else:
+        print(ip.get_val())
 
 
 
