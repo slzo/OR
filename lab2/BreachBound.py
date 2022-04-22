@@ -140,6 +140,7 @@ def start(): #由此输入数据,并调用IP进行解决
     ip = IP_Model(c,A,b,min_,max_)
     ip._Init()
     ip._solve()
+    print("最优解:")
     print(SOL)
     if(max_min):
         print(-1*ip.get_val())
